@@ -6,6 +6,7 @@ import { MensajeItem, Puntitos } from "./components";
 import { Sidebar, Conversacion } from "./Sidebar";
 
 const STORAGE_KEY = "nova-conversaciones";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function generarId() {
   return Math.random().toString(36).substring(2, 10);
@@ -113,7 +114,7 @@ export default function Home() {
     );
 
     try {
-      const respuesta = await fetch("http://localhost:8000/chat", {
+      const respuesta = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
