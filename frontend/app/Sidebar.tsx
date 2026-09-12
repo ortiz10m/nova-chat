@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, MessageSquare, Trash2, Sparkles } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Sparkles, X } from "lucide-react";
 
 export type Conversacion = {
   id: string;
@@ -14,6 +14,8 @@ type SidebarProps = {
   onNueva: () => void;
   onSeleccionar: (id: string) => void;
   onEliminar: (id: string) => void;
+  abierto: boolean;
+  onCerrar: () => void;
 };
 
 export function Sidebar({
@@ -22,65 +24,101 @@ export function Sidebar({
   onNueva,
   onSeleccionar,
   onEliminar,
+  abierto,
+  onCerrar,
 }: SidebarProps) {
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-zinc-800/50 bg-zinc-950 flex flex-col h-full">
-      {/* Header del sidebar */}
-      <div className="p-3 border-b border-zinc-800/50">
-        <div className="flex items-center gap-2 mb-3 px-1">
-          <Sparkles className="w-5 h-5 text-orange-500" />
-          <h1 className="text-lg font-semibold">Nova</h1>
-        </div>
-        <button
-          onClick={onNueva}
-          className="w-full flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-lg px-3 py-2 text-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nueva conversación</span>
-        </button>
-      </div>
+    <>
+      {/* Overlay para móvil */}
+      {abierto && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={onCerrar}
+        />
+      )}
 
-      {/* Lista de conversaciones */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {conversaciones.length === 0 && (
-          <p className="text-xs text-zinc-600 text-center py-4 px-2">
-            No hay conversaciones todavía
-          </p>
-        )}
-
-        {conversaciones.map((conv) => {
-          const activa = conv.id === conversacionActivaId;
-          return (
-            <div
-              key={conv.id}
-              className={`group flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer transition-colors ${
-                activa
-                  ? "bg-zinc-800 text-white"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
-              }`}
-              onClick={() => onSeleccionar(conv.id)}
-            >
-              <MessageSquare className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm truncate flex-1">{conv.titulo}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEliminar(conv.id);
-                }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-red-400"
-                aria-label="Eliminar conversación"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed md:static inset-y-0 left-0 z-40
+          w-64 flex-shrink-0 border-r border-zinc-800/50 bg-zinc-950
+          flex flex-col h-full
+          transition-transform duration-300
+          ${abierto ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        {/* Header */}
+        <div className="p-3 border-b border-zinc-800/50">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-orange-500" />
+              <h1 className="text-lg font-semibold">Nova</h1>
             </div>
-          );
-        })}
-      </div>
+            <button
+              onClick={onCerrar}
+              className="md:hidden p-1 text-zinc-400 hover:text-white"
+              aria-label="Cerrar sidebar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              onNueva();
+              onCerrar();
+            }}
+            className="w-full flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-lg px-3 py-2 text-sm transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nueva conversación</span>
+          </button>
+        </div>
 
-      {/* Footer del sidebar (opcional) */}
-      <div className="p-3 border-t border-zinc-800/50">
-        <p className="text-xs text-zinc-600">Nova v1.0</p>
-      </div>
-    </aside>
+        {/* Lista de conversaciones */}
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {conversaciones.length === 0 && (
+            <p className="text-xs text-zinc-600 text-center py-4 px-2">
+              No hay conversaciones todavía
+            </p>
+          )}
+
+          {conversaciones.map((conv) => {
+            const activa = conv.id === conversacionActivaId;
+            return (
+              <div
+                key={conv.id}
+                className={`group flex items-center gap-2 rounded-lg px-2 py-2 cursor-pointer transition-colors ${
+                  activa
+                    ? "bg-zinc-800 text-white"
+                    : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200"
+                }`}
+                onClick={() => {
+                  onSeleccionar(conv.id);
+                  onCerrar();
+                }}
+              >
+                <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm truncate flex-1">{conv.titulo}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEliminar(conv.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-red-400"
+                  aria-label="Eliminar conversación"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="p-3 border-t border-zinc-800/50">
+          <p className="text-xs text-zinc-600">Nova v1.0</p>
+        </div>
+      </aside>
+    </>
   );
 }

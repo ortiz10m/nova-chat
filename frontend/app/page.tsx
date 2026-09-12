@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles } from "lucide-react";
+import { Send, Sparkles, Menu } from "lucide-react";
 import { MensajeItem, Puntitos } from "./components";
 import { Sidebar, Conversacion } from "./Sidebar";
 
@@ -25,10 +25,10 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [cargando, setCargando] = useState(false);
   const [hidratado, setHidratado] = useState(false);
+  const [sidebarAbierto, setSidebarAbierto] = useState(false);
 
   const finDelChat = useRef<HTMLDivElement>(null);
 
-  // Cargar conversaciones de localStorage al iniciar
   useEffect(() => {
     const guardado = localStorage.getItem(STORAGE_KEY);
     if (guardado) {
@@ -40,7 +40,6 @@ export default function Home() {
         console.error("Error al cargar conversaciones:", e);
       }
     } else {
-      // Si no hay nada guardado, crear una conversación nueva
       const nueva = crearConversacionVacia();
       setConversaciones([nueva]);
       setConversacionActivaId(nueva.id);
@@ -48,7 +47,6 @@ export default function Home() {
     setHidratado(true);
   }, []);
 
-  // Guardar en localStorage cada vez que cambian las conversaciones
   useEffect(() => {
     if (!hidratado) return;
     localStorage.setItem(
@@ -57,7 +55,6 @@ export default function Home() {
     );
   }, [conversaciones, conversacionActivaId, hidratado]);
 
-  // Auto-scroll al fondo
   useEffect(() => {
     finDelChat.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversaciones, conversacionActivaId, cargando]);
@@ -80,7 +77,6 @@ export default function Home() {
   function eliminarConversacion(id: string) {
     setConversaciones((prev) => {
       const filtradas = prev.filter((c) => c.id !== id);
-      // Si eliminamos la activa, activar la primera disponible (o crear una nueva)
       if (id === conversacionActivaId) {
         if (filtradas.length > 0) {
           setConversacionActivaId(filtradas[0].id);
@@ -102,7 +98,6 @@ export default function Home() {
     setInput("");
     setCargando(true);
 
-    // Agregar mensaje del usuario + actualizar título si es el primero
     setConversaciones((prev) =>
       prev.map((c) => {
         if (c.id !== idConv) return c;
@@ -171,18 +166,34 @@ export default function Home() {
 
   return (
     <div className="h-screen flex bg-gradient-to-b from-zinc-950 to-black text-white">
-      {/* Sidebar */}
       <Sidebar
         conversaciones={conversaciones}
         conversacionActivaId={conversacionActivaId}
         onNueva={nuevaConversacion}
         onSeleccionar={seleccionarConversacion}
         onEliminar={eliminarConversacion}
+        abierto={sidebarAbierto}
+        onCerrar={() => setSidebarAbierto(false)}
       />
 
-      {/* Área principal del chat */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Área de mensajes */}
+        {/* Header móvil con botón de menú */}
+        <div className="md:hidden flex-shrink-0 border-b border-zinc-800/50 bg-zinc-950/50 backdrop-blur-sm">
+          <div className="px-4 py-3 flex items-center gap-3">
+            <button
+              onClick={() => setSidebarAbierto(true)}
+              className="p-1 text-zinc-400 hover:text-white"
+              aria-label="Abrir sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-orange-500" />
+              <h1 className="text-lg font-semibold">Nova</h1>
+            </div>
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
             {mensajes.length === 0 && (
@@ -218,7 +229,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Input */}
         <div className="flex-shrink-0 border-t border-zinc-800/50 bg-zinc-950/80 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto p-4">
             <div className="relative flex items-end gap-2 bg-zinc-900 border border-zinc-800 rounded-2xl p-2 focus-within:border-zinc-600 transition-colors">
