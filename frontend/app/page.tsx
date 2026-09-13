@@ -4,8 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Sparkles, Menu } from "lucide-react";
 import { MensajeItem, Puntitos } from "./components";
 import { Sidebar, Conversacion } from "./Sidebar";
+import { ModalApiKey } from "./ModalApiKey";
 
 const STORAGE_KEY = "nova-conversaciones";
+const API_KEY_STORAGE = "nova-api-key";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function generarId() {
@@ -28,9 +30,16 @@ export default function Home() {
   const [hidratado, setHidratado] = useState(false);
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
 
+  // --- API key ---
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [esCambioKey, setEsCambioKey] = useState(false);
+
   const finDelChat = useRef<HTMLDivElement>(null);
 
+  // Cargar de localStorage al iniciar
   useEffect(() => {
+    // Conversaciones
     const guardado = localStorage.getItem(STORAGE_KEY);
     if (guardado) {
       try {
@@ -45,9 +54,20 @@ export default function Home() {
       setConversaciones([nueva]);
       setConversacionActivaId(nueva.id);
     }
+
+    // API key
+    const keyGuardada = localStorage.getItem(API_KEY_STORAGE);
+    if (keyGuardada) {
+      setApiKey(keyGuardada);
+    } else {
+      setMostrarModal(true);
+      setEsCambioKey(false);
+    }
+
     setHidratado(true);
   }, []);
 
+  // Guardar conversaciones
   useEffect(() => {
     if (!hidratado) return;
     localStorage.setItem(
@@ -56,6 +76,7 @@ export default function Home() {
     );
   }, [conversaciones, conversacionActivaId, hidratado]);
 
+  // Auto-scroll
   useEffect(() => {
     finDelChat.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversaciones, conversacionActivaId, cargando]);
@@ -65,6 +86,26 @@ export default function Home() {
   );
   const mensajes = conversacionActiva?.mensajes || [];
 
+  // --- API key handlers ---
+  function guardarApiKey(key: string) {
+    localStorage.setItem(API_KEY_STORAGE, key);
+    setApiKey(key);
+    setMostrarModal(false);
+    setEsCambioKey(false);
+  }
+
+  function abrirCambioKey() {
+    setEsCambioKey(true);
+    setMostrarModal(true);
+    setSidebarAbierto(false);
+  }
+
+  function cerrarModal() {
+    setMostrarModal(false);
+    setEsCambioKey(false);
+  }
+
+  // --- Conversaciones handlers ---
   function nuevaConversacion() {
     const nueva = crearConversacionVacia();
     setConversaciones((prev) => [nueva, ...prev]);
@@ -91,8 +132,9 @@ export default function Home() {
     });
   }
 
+  // --- Envío de mensajes ---
   async function enviarMensaje() {
-    if (!input.trim() || cargando || !conversacionActiva) return;
+    if (!input.trim() || cargando || !conversacionActiva || !apiKey) return;
 
     const mensajeUsuario = input.trim();
     const idConv = conversacionActiva.id;
@@ -116,7 +158,10 @@ export default function Home() {
     try {
       const respuesta = await fetch(`${API_URL}/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey,
+        },
         body: JSON.stringify({
           mensaje: mensajeUsuario,
           sesion_id: idConv,
@@ -124,7 +169,8 @@ export default function Home() {
       });
 
       if (!respuesta.ok) {
-        throw new Error(`Error ${respuesta.status}`);
+        const errorData = await respuesta.json().catch(() => null);
+        throw new Error(errorData?.detail || `Error ${respuesta.status}`);
       }
 
       const data = await respuesta.json();
@@ -173,12 +219,13 @@ export default function Home() {
         onNueva={nuevaConversacion}
         onSeleccionar={seleccionarConversacion}
         onEliminar={eliminarConversacion}
+        onCambiarApiKey={abrirCambioKey}
         abierto={sidebarAbierto}
         onCerrar={() => setSidebarAbierto(false)}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header móvil con botón de menú */}
+        {/* Header móvil */}
         <div className="md:hidden flex-shrink-0 border-b border-zinc-800/50 bg-zinc-950/50 backdrop-blur-sm">
           <div className="px-4 py-3 flex items-center gap-3">
             <button
@@ -237,15 +284,15 @@ export default function Home() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={manejarTecla}
-                placeholder="Escribe un mensaje..."
-                disabled={cargando}
+                placeholder={apiKey ? "Escribe un mensaje..." : "Configura tu API key primero..."}
+                disabled={cargando || !apiKey}
                 rows={1}
                 className="flex-1 bg-transparent text-white placeholder-zinc-500 focus:outline-none resize-none px-3 py-2 max-h-40 disabled:opacity-50"
                 style={{ minHeight: "40px" }}
               />
               <button
                 onClick={enviarMensaje}
-                disabled={cargando || !input.trim()}
+                disabled={cargando || !input.trim() || !apiKey}
                 className="bg-white hover:bg-zinc-200 disabled:bg-zinc-700 disabled:cursor-not-allowed text-black rounded-xl p-2.5 transition-colors flex-shrink-0"
                 aria-label="Enviar mensaje"
               >
@@ -258,6 +305,15 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Modal de API key */}
+      <ModalApiKey
+        abierto={mostrarModal}
+        apiKeyActual={apiKey}
+        onGuardar={guardarApiKey}
+        onCerrar={esCambioKey ? cerrarModal : undefined}
+        esCambio={esCambioKey}
+      />
     </div>
   );
 }

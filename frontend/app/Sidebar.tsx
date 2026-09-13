@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, MessageSquare, Trash2, Sparkles, X } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Sparkles, X, Key } from "lucide-react";
 
 export type Conversacion = {
   id: string;
@@ -14,6 +14,7 @@ type SidebarProps = {
   onNueva: () => void;
   onSeleccionar: (id: string) => void;
   onEliminar: (id: string) => void;
+  onCambiarApiKey: () => void;
   abierto: boolean;
   onCerrar: () => void;
 };
@@ -24,6 +25,7 @@ export function Sidebar({
   onNueva,
   onSeleccionar,
   onEliminar,
+  onCambiarApiKey,
   abierto,
   onCerrar,
 }: SidebarProps) {
@@ -114,9 +116,16 @@ export function Sidebar({
           })}
         </div>
 
-        {/* Footer */}
-        <div className="p-3 border-t border-zinc-800/50">
-          <p className="text-xs text-zinc-600">Nova v1.0</p>
+        {/* Footer con botón de API key */}
+        <div className="p-3 border-t border-zinc-800/50 space-y-2">
+          <button
+            onClick={onCambiarApiKey}
+            className="w-full flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg px-3 py-2 transition-colors"
+          >
+            <Key className="w-3.5 h-3.5" />
+            <span>Cambiar API key</span>
+          </button>
+          <p className="text-xs text-zinc-600 px-1">Nova v2.0 · BYOK</p>
         </div>
       </aside>
     </>
