@@ -8,33 +8,57 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?style=flat&logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat)
 
+## 🚀 Demo en vivo
+
+**Prueba Nova Chat online:** [https://nova-chat-app-one.vercel.app](https://nova-chat-app-one.vercel.app)
+
 ## 📖 Sobre el proyecto
 
-**Nova Chat** es la evolución de [agente-gemini-desde-cero](https://github.com/ortiz10m/agente-gemini-desde-cero): un agente de IA que empezó como script de consola y ahora es una aplicación web completa con backend y frontend separados.
+**Nova Chat** es la evolución de [agente-gemini-desde-cero](https://github.com/ortiz10m/agente-gemini-desde-cero): un agente de IA que empezó como script de consola y ahora es una aplicación web completa con backend y frontend separados, desplegada en producción.
 
 El proyecto demuestra cómo construir un producto real de IA desde cero:
 
 - **Backend en FastAPI** que expone el agente Nova como API REST.
-- **Frontend en Next.js** con una interfaz de chat moderna.
+- **Frontend en Next.js** con una interfaz de chat moderna tipo ChatGPT.
 - **Comunicación cliente-servidor** vía HTTP con sesiones independientes por usuario.
+- **Deploy en producción** con backend en Render y frontend en Vercel.
 
 ## 🏗️ Arquitectura
 
 ```
-┌─────────────────┐         ┌──────────────────┐
-│                 │  HTTP   │                  │
-│   FRONTEND      │ ◄─────► │   BACKEND        │
-│   Next.js       │         │   FastAPI        │
-│   localhost:3000│         │   localhost:8000 │
-│                 │         │                  │
-└─────────────────┘         └──────────────────┘
-                                     │
-                                     ▼
-                            ┌──────────────────┐
-                            │  Google Gemini   │
-                            │  API             │
-                            └──────────────────┘
+┌──────────────────────────────┐
+│  USUARIO (navegador)         │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│  FRONTEND (Vercel)           │
+│  nova-chat-app-one.vercel.app│
+└──────────────┬───────────────┘
+               │ POST /chat
+               ▼
+┌──────────────────────────────┐
+│  BACKEND (Render)            │
+│  nova-chat-api-60wk.onrender │
+└──────────────┬───────────────┘
+               │
+               ▼
+        ┌─────────────┐
+        │  GEMINI API │
+        └─────────────┘
 ```
+
+## ✨ Características
+
+- 💬 **Chat con IA** en tiempo real
+- 🎨 **Interfaz moderna** con tema oscuro tipo ChatGPT
+- 📝 **Markdown renderizado** en las respuestas
+- 🎯 **Syntax highlighting** para bloques de código
+- 📚 **Múltiples conversaciones** con sidebar
+- 💾 **Historial persistente** (localStorage)
+- 📱 **Responsive** (desktop + móvil)
+- 🔧 **Herramientas de agente**: leer archivos y listar directorios
+- ⚡ **Reintentos automáticos** ante errores de red
 
 ## 📁 Estructura del proyecto
 
@@ -49,17 +73,23 @@ nova-chat/
 │   ├── main.py               # Servidor FastAPI
 │   ├── requirements.txt      # Dependencias Python
 │   └── .env                  # API key (NO se sube a GitHub)
-└── frontend/                 # Interfaz en Next.js
-    ├── app/
-    │   ├── layout.tsx        # Estructura general
-    │   ├── page.tsx          # Página principal (chat)
-    │   └── globals.css       # Estilos globales
-    ├── public/               # Assets estáticos
-    ├── package.json          # Dependencias Node.js
-    └── next.config.ts        # Configuración de Next.js
+├── frontend/                 # Interfaz en Next.js
+│   ├── app/
+│   │   ├── layout.tsx        # Estructura general
+│   │   ├── page.tsx          # Página principal (chat)
+│   │   ├── components.tsx    # Componentes de mensajes y markdown
+│   │   ├── Sidebar.tsx       # Sidebar con historial
+│   │   ├── icon.svg          # Favicon personalizado
+│   │   └── globals.css       # Estilos globales
+│   ├── public/               # Assets estáticos
+│   ├── package.json          # Dependencias Node.js
+│   └── next.config.ts        # Configuración de Next.js
+├── vercel.json               # Configuración de deploy en Vercel
+├── render.yaml               # Configuración de deploy en Render
+└── README.md
 ```
 
-## 🚀 Instalación y uso
+## 🚀 Instalación y uso local
 
 ### Backend
 
@@ -111,6 +141,13 @@ El frontend queda disponible en `http://localhost:3000`.
 
 **Importante:** el backend debe estar corriendo para que el chat funcione.
 
+## 🌐 Deploy en producción
+
+- **Backend:** [Render](https://render.com) → `https://nova-chat-api-60wk.onrender.com`
+- **Frontend:** [Vercel](https://vercel.com) → `https://nova-chat-app-one.vercel.app`
+
+Ambos servicios se actualizan automáticamente cuando se hace push a `main`.
+
 ## 🛠️ Tecnologías
 
 **Backend:**
@@ -125,6 +162,10 @@ El frontend queda disponible en `http://localhost:3000`.
 - React 19
 - TypeScript
 - Tailwind CSS
+- react-markdown — renderizado de markdown
+- remark-gfm — soporte GitHub Flavored Markdown
+- react-syntax-highlighter — coloreado de código
+- lucide-react — iconos
 
 ## 🗺️ Roadmap
 
@@ -134,8 +175,9 @@ El frontend queda disponible en `http://localhost:3000`.
 - [x] Documentación automática con Swagger
 - [x] Frontend con Next.js
 - [x] Chat funcional conectado al backend
-- [ ] Diseño brutal (animaciones, markdown renderizado, sidebar)
-- [ ] Deploy (backend en Render, frontend en Vercel)
+- [x] Diseño brutal (animaciones, markdown renderizado, sidebar)
+- [x] Deploy en producción (backend + frontend)
+- [ ] Fase 6: Seguridad (rate limiting, CORS cerrado)
 
 ## 🔑 Cómo obtener tu API key de Gemini
 
@@ -151,7 +193,10 @@ El frontend queda disponible en `http://localhost:3000`.
 - Cómo crear una interfaz de chat con React + Next.js
 - Cómo gestionar estado con `useState` y hacer llamadas HTTP con `fetch`
 - Cómo estilizar interfaces modernas con Tailwind CSS
-- Arquitectura cliente-servidor completa
+- Cómo renderizar markdown y código con syntax highlighting
+- Cómo implementar un sidebar con historial persistente en localStorage
+- Cómo deployar backend y frontend en plataformas distintas
+- Arquitectura cliente-servidor completa en producción
 
 ## 📄 Licencia
 
